@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="board">
+	<insert id="create">
+		insert into
+		bbs1(bno,title,content,writer,regdate)
+		values
+		(bbs1_seq.nextval,#{title},#{content},#{writer},sysdate)
+	</insert>
+	<select id="read" resultType="BoardVO">
+		select
+		bno,title,content,writer,regdate,viewcnt
+		from
+		bbs1
+		where
+		bno = #{bno}
+	</select>
+	<update id="update" parameterType="hashmap">
+		update bbs1 set
+		title=#{title},content = #{content}
+		where bno= #{bno}
+	</update>
+
+	<delete id="delete" parameterType="hashmap">
+		delete from bbs1 where
+		bno=#{bno}
+	</delete>
+	<select id="listAll" resultType="BoardVO">
+		select
+		bno,title,content,writer,regdate,viewcnt
+		from bbs1
+		where bno &gt; 0
+		order by bno desc, regdate desc
+	</select>
+	<select id="listPage" resultType="BoardVO">
+		select * from
+		(select rownum
+		,bno,title,content,writer,regdate,viewcnt from
+		(select * from bbs1
+		where bno &gt; 0 order by bno desc , regdate desc))
+		where rownum
+		between #{page} and 10
+	</select>
+	<select id="listCriteria" resultType="BoardVO">
+		select * from
+		(select rownum
+		as rnum ,bno,title,content,writer,regdate,viewcnt from
+		(select * from
+		bbs1 where bno &gt; 0 order by bno desc , regdate desc))
+		where rnum
+		between #{pageStart} and #{perPageNum}
+	</select>
+	<select id="countPaging" resultType="int">
+		SELECT COUNT(BNO)
+		FROM bbs1
+		WHERE BNO &gt; 0
+	</select>
+
+
+	<sql id="search">
+		<if test="searchType != null">
+			<if test="searchType == 't'.toString()">
+				and ( title like '%' || #{keyword} || '%' )
+			</if>
+			<if test="searchType == 'c'.toString()">
+				and ( content like '%' || #{keyword} || '%' )
+			</if>
+			<if test="searchType == 'w'.toString()">
+				and ( writer like '%' || #{keyword} || '%' )
+			</if>
+			<if test="searchType == 'tc'.toString()">
+				and ( title like '%' || #{keyword} || '%'
+				or content like '%' || #{keyword} || '%' )
+			</if>
+
+			<if test="searchType == 'cw'.toString()">
+				and ( content like '%' || #{keyword} || '%'
+				or writer like '%' || #{keyword} || '%' )
+			</if>
+			<if test="searchType == 'tcw'.toString()">
+				and ( title like '%' || #{keyword} || '%'
+				or content like '%' || #{keyword} || '%'
+				or writer like '%' || #{keyword} || '%' )
+			</if>
+		</if>
+	</sql>
+	
+	<select id="listSearch" resultType="BoardVO">
+		SELECT * FROM (select rownum
+		as rnum , BNO, TITLE, CONTENT, WRITER, REGDATE, VIEWCNT from(select * from bbs1 WHERE BNO &gt; 0 <include refid="search"/> ORDER BY BNO DESC ))
+		where rnum between #{pageStart} and #{perPageNum}
+	</select>
+
+	<select id="listSearchCount" resultType="int">
+		SELECT COUNT(BNO)
+		FROM bbs1
+		WHERE BNO &gt; 0
+		<include refid="search"></include>
+	</select>
+	
+	<update id="updateViewCnt">
+		update bbs1 set viewcnt = viewcnt+1 where bno = #{bno}
+	</update>
+</mapper>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="member">
+	<select id="getTime" resultType="string">
+		SELECT SYSDATE FROM DUAL
+	</select>
+	<insert id="insertMember">
+		INSERT INTO MEMBER(USERID,USERPW,USERNAME,USEREMAIL,regdate)
+		VALUES
+		(#{userid},#{userpw},#{username},#{useremail},sysdate)
+	</insert>
+	<select id="getMember" resultType="MemberVO">
+		select * from member where userid=#{userid}
+	
+	</select>
+	
+	<select id="checkMemberId" resultType="int">
+		SELECT COUNT(userid)
+		FROM member
+		WHERE userid=#{userid}
+	</select>
+	
+	 <select id="login" resultType="MemberVO">
+        select * from member where userid = #{userid} and userpw = #{userpw}
+    </select>
+    
+	<update id="keepLogin">
+        update member set sessionKey = #{sessionId}, sessionLimit = #{next} where userId=#{userId}
+    </update>
+	
+	<select id="checkUserWithSessionKey" resultType="MemberVO">
+        select * from member where sessionKey = #{sessionId} and sessionLimit > sysdate
+    </select>
+     
+</mapper>
